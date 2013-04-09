@@ -20,9 +20,8 @@ extern int st1, st2, st3, st4;
 int input_image()
 {
 	
-	CvCapture *cap = cvCreateFileCapture("1.mp4");
+	CvCapture *cap = cvCreateFileCapture("2.mp4");
 	image_size = cvSize(cvGetCaptureProperty(cap, CV_CAP_PROP_FRAME_WIDTH), cvGetCaptureProperty(cap, CV_CAP_PROP_FRAME_HEIGHT));
-	//image_size = cvSize(640, 360);
 	fps = cvGetCaptureProperty(cap, CV_CAP_PROP_FPS);
 	fourcc = (int)cvGetCaptureProperty(cap, CV_CAP_PROP_FOURCC);
 	printf("Video Info:\n");
@@ -38,13 +37,24 @@ int input_image()
 		if (frame != NULL)
 		{
 			images[i] = cvCreateImage(image_size, IPL_DEPTH_8U, 3);
-			//cvResize(frame, images[i], CV_INTER_LINEAR);
 			cvCopy(frame, images[i], NULL);
 		}
 		else break;
 	}
 	cvReleaseCapture(&cap);
 	return i;
+	/*image_num = 8 ;*/
+	/*images[0] = cvLoadImage("1.jpg" , CV_LOAD_IMAGE_COLOR);*/
+	/*images[1] = cvLoadImage("2.jpg", CV_LOAD_IMAGE_COLOR);*/
+	/*images[2] = cvLoadImage("3.jpg", CV_LOAD_IMAGE_COLOR);*/
+	/*images[3] = cvLoadImage("4.jpg", CV_LOAD_IMAGE_COLOR);*/
+	/*images[4] = cvLoadImage("5.jpg", CV_LOAD_IMAGE_COLOR);*/
+	/*images[5] = cvLoadImage("6.jpg", CV_LOAD_IMAGE_COLOR);*/
+	/*images[6] = cvLoadImage("7.jpg", CV_LOAD_IMAGE_COLOR);*/
+	/*images[7] = cvLoadImage("8.jpg", CV_LOAD_IMAGE_COLOR);*/
+	/*[>images[8] = cvLoadImage("9.jpg", CV_LOAD_IMAGE_COLOR);<]*/
+	/*image_size =cvGetSize(images[0]); */
+	/*return image_num ;*/
 }
 
 static void calLuck_pthread(void* flag)
@@ -158,7 +168,8 @@ int main()
 	/*cvWaitKey(0);*/
 	/*cvDestroyAllWindows();*/
 	
-	IplImage *result = cvCreateImage(image_size, IPL_DEPTH_8U, 3);
+	/*IplImage *result = cvCreateImage(image_size, IPL_DEPTH_8U, 3);*/
+	IplImage *result = cvCloneImage(images[3]);
 	IplImage *result_luck = cvCreateImage(image_size, IPL_DEPTH_32F, 4);
 	deblur_image(image_num, 3, result, result_luck);
 	cvReleaseImage(&result);

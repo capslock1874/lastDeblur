@@ -4,7 +4,7 @@
 #include <opencv2/imgproc/imgproc_c.h>
 #include <opencv2/highgui/highgui_c.h>
 #include "deblur.h"
-#define PATCH_SIZE 11
+#define PATCH_SIZE 5 
 #define DEBLUR_WIN_SIZE 11
 #define SIGMA_W 10
 #define LAMBDA 10
@@ -271,8 +271,8 @@ static int deblur_patch(IplImage *blur[], IplImage *luck[], int image_num, int n
 	int minx = -21;
 	int miny = -21;
 	int mx = x , my = y ; 
-	double mindiff = 200000000000 ;
-	double tmpDiff = 200000000000 ;
+	double mindiff = 2000000000 ;
+	double tmpDiff = 2000000000 ;
 	int pos = 0 ;
 	typedef void (*searchFuncPtr)(IplImage*, IplImage*, IplImage*, int* , int* , int* , double* , int , int ) ;
 	searchFuncPtr searchFuncArray[10] = {NULL , searchLeftTopCorner , searchTop , searchRightTopCorner  ,
@@ -312,11 +312,12 @@ static int deblur_patch(IplImage *blur[], IplImage *luck[], int image_num, int n
 					continue ;
 				}else
 				{
-					mindiff = tmpDiff ;
-					minj = j ;
-					minx = searchX ;
-					miny = searchY ;
-					continue ;
+					/*mindiff = tmpDiff ;*/
+					/*minj = j ;*/
+					/*minx = searchX ;*/
+					/*miny = searchY ;*/
+					/*continue ;*/
+					return 1 ;
 				}
 			}
 		}
@@ -325,18 +326,26 @@ static int deblur_patch(IplImage *blur[], IplImage *luck[], int image_num, int n
 	res->val[1] = minx;
 	res->val[2] = miny;
 	res->val[3] = mindiff;
+	
+	/*CvScalar s ;*/
+	/*s = cvGet2D(luck, y + i, x + j);*/
+
 	if( minj == -21 )
 	{
 		return 1 ;	
 	}
 	return 0;
 }
-static CvScalar weighted_average(const CvScalar *s, const double *w, int n)
+static CvScalar weighted_average(const CvScalar *s,  double *w, int n)
 {
 	CvScalar res = {{0, 0, 0, 0}};
 	if (n > 0)
 	{
 		double wsum = 0;
+		w[0] = w[0]*10000 + 1 ;
+		w[1] = w[1]*10000 + 1 ;
+		w[2] = w[2]*10000 + 1 ;
+		w[3] = w[3]*10000 + 1 ;
 		for (int i = 0; i < n; ++i)
 		{
 			wsum += w[i];
@@ -372,16 +381,16 @@ void* deblur_Image_pthread(void* rank)
 	int x , y ;
 	for (int i = my_first_row; i <= my_last_row; ++i)
 	{
-		y = (i+1)*(PATCH_SIZE/2)+2;
+		y = (i+1)*(PATCH_SIZE/2);
 		int t1 = clock();
 		for (int j = 0; j < grid_c; ++j)
 		{
 			CvScalar res;
-			x = (j+1)*(PATCH_SIZE/2)+2;
+			x = (j+1)*(PATCH_SIZE/2);
 			/*printf("in pthread x= %d y = %d\n" , x , y) ;*/
 			if (deblur_patch(blur, trans_luck, global_image_num, global_n, x, y, &res) != 0)
 			{
-				printf("deblur_patch: %d:%d,%d failed.\n", global_n, x, y);
+				/*printf("deblur_patch: %d:%d,%d failed.\n", global_n, x, y);*/
 				res.val[0] = global_n;
 				res.val[1] = x;
 				res.val[2] = y;
@@ -398,8 +407,8 @@ void* deblur_Image_pthread(void* rank)
 
 void deblur_image(int image_num, int n, IplImage *result, IplImage *result_luck)
 {
-	cvSetZero(result);
-	cvSetZero(result_luck);
+	/*cvSetZero(result);*/
+	/*cvSetZero(result_luck);*/
 	/*IplImage *trans[MAX_IMAGE];*/
 	/*IplImage *trans_luck[MAX_IMAGE];*/
 	/*IplImage *blur[MAX_IMAGE];*/
@@ -426,8 +435,8 @@ void deblur_image(int image_num, int n, IplImage *result, IplImage *result_luck)
 	/*}*/
 	/*cvWaitKey(0);*/
 	/*cvDestroyAllWindows();*/
-	grid_r = (image_size.height-PATCH_SIZE/2-5) / (PATCH_SIZE/2);
-	grid_c = (image_size.width-PATCH_SIZE/2-5) / (PATCH_SIZE/2);
+	grid_r = (image_size.height-PATCH_SIZE/2-1) / (PATCH_SIZE/2);
+	grid_c = (image_size.width-PATCH_SIZE/2-1) / (PATCH_SIZE/2);
 	grid_patch = grid_r / PTHREAD_NUM ;
 	/*P(grid_r) ;*/
 	/*P(grid_c) ;*/
@@ -463,7 +472,7 @@ void deblur_image(int image_num, int n, IplImage *result, IplImage *result_luck)
 					res.val[0] = n;
 					res.val[1] = x;
 					res.val[2] = y;
-					res.val[3] = 0;
+					res.val[3] = 1000 ;
 				}
 				res.val[3] = exp(-res.val[3]/(2*SIGMA_W*SIGMA_W));
 				CV_MAT_ELEM(*patch, CvScalar, i, j) = res;
